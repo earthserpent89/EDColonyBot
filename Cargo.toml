@@ -1,8 +1,8 @@
 [package]
 name = "edcolonybot"
 version = "0.1.0"
-authors = ["Joshua Betts"]
 edition = "2024"
+authors = ["Joshua Betts", "Zachary Perkins"]
 description = "Discord Bot to Track construction site deliveries for Elite Dangerous"
 
 # Dependencies for the project
