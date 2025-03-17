@@ -5,24 +5,13 @@ edition = "2024"
 authors = ["Joshua Betts", "Zachary Perkins"]
 description = "Discord Bot to Track construction site deliveries for Elite Dangerous"
 
-# Dependencies for the project
 [dependencies]
-# Discord API
-serenity = { version = "0.11", features = ["client", "gateway", "rustls_backend", "model", "cache", "framework", "standard_framework"] }
-tokio = { version = "1.21", features = ["macros", "rt-multi-thread", "time"] }
-
-# Database
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "sqlite", "chrono"] }
-
-# CSV parsing
-csv = "1.2"
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
+poise = "0.6.1"
 serde = { version = "1.0", features = ["derive"] }
-
-# Utilities
-dotenv = "0.15"
-chrono = "0.4"
+dotenv = "0.15.0"
 anyhow = "1.0"
 thiserror = "1.0"
-async-trait = "0.1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+file_sync = { git = "https://github.com/zperk13/file_sync" }

@@ -20,19 +20,7 @@ ED Colony Bot is a Discord bot designed to track construction sites and commodit
 EDColonyBot
 ├── src
 │   ├── main.rs               # Entry point of the application
-│   ├── bot                   # Discord bot functionality
-│   │   ├── mod.rs
-│   │   ├── commands.rs       # Slash command implementations
-│   │   └── events.rs         # Discord event handlers
-│   ├── data                  # Data management
-│   │   ├── mod.rs
-│   │   ├── models.rs         # Data structures for sites, commodities, deliveries
-│   │   └── database.rs       # Database operations
-│   └── elite                 # Elite Dangerous specific logic
-│       ├── mod.rs
-│       ├── construction.rs   # Construction site logic
-│       └── csv.rs            # CSV import/export functionality
-├── .gitignore                # Files and directories to ignore by Git
+│   └── .gitignore                # Files and directories to ignore by Git
 ├── Cargo.toml                # Cargo configuration file
 ├── .env                      # Environment variables (not in git)
 └── README.md                 # Project documentation
