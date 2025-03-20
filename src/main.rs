@@ -1,14 +1,15 @@
-
-use std::env;
+use anyhow::{Error, Result};
 use dotenv::dotenv;
-use poise::serenity_prelude as serenity;
-use serenity::prelude::*;
-use serenity::GuildId;
-use tracing::{error, info};
-use anyhow::{Result, Error};
 use file_sync::FileSync;
+use poise::CreateReply;
+use poise::serenity_prelude as serenity;
+use serde::{Deserialize, Serialize};
+use serenity::GuildId;
+use serenity::prelude::*;
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+use std::env;
+use tokio::sync::Mutex;
+use tracing::{error, info};
 
 #[derive(Serialize, Deserialize)]
 struct Commodity {
@@ -17,24 +18,32 @@ struct Commodity {
     required: u64,
 }
 
-
 #[derive(Serialize, Deserialize)]
 struct Site {
     name: String,
-    commodities: Vec<Commodity>
+    commodities: Vec<Commodity>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct System {
     name: String,
-    sites: Vec<Site>
+    sites: Vec<Site>,
 }
 
 struct Data {
-    servers: FileSync<HashMap<GuildId, Vec<System>>>
+    servers: Mutex<FileSync<HashMap<GuildId, Vec<System>>>>,
 }
 
 type Context<'a> = poise::Context<'a, Data, Error>;
+
+// system add <name>
+// system remove <name>
+// site add <system> <name> (<preset>)
+// site remove <name>
+// commodity add <site_name> <comm_name> <amount>
+// commodity remove <site_name> <comm_name>
+// deliver <site_name> <comm_name> <amount>
+
 #[poise::command(slash_command)]
 async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
     let gid = match ctx.guild_id() {
@@ -82,6 +91,45 @@ async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
 
     Ok(())
 }
+#[poise::command(slash_command)]
+async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
+    let gid = match ctx.guild_id() {
+        Some(gid) => gid,
+        None => {
+            ctx.say("This is not a guild/server").await?;
+            return Ok(());
+        }
+    };
+    let reply = ctx.say("Processing...").await?;
+    let mut message = String::from("");
+    ctx.data()
+        .servers
+        .lock()
+        .await
+        .modify(|servers| match servers.get_mut(&gid) {
+            Some(server) => {
+                let index_to_remove = server.iter().enumerate().find(|(_index, system)| system.name.to_lowercase() == system_name).map(|(index, _system)| index);
+                match index_to_remove {
+                    Some(index) => {
+                        server.remove(index);
+                        message = "Done".into();
+                    }
+                    None => {
+                        message = "That system is not registered in this server".into();
+                    }
+                }
+            }
+            None => {
+                message = "There are no systems registered in this server".into();
+            }
+        })
+        .unwrap();
+    reply
+        .edit(ctx, CreateReply::default().content(message))
+        .await?;
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -90,10 +138,8 @@ async fn main() -> Result<()> {
 
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
-    // Get Discord token
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-    
+
     let intents = serenity::GatewayIntents::empty();
 
     let framework = poise::Framework::builder()
@@ -103,7 +149,14 @@ async fn main() -> Result<()> {
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                info!("Commands: {:#?}", framework.options().commands);
+                //poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                poise::builtins::register_in_guild(
+                    ctx,
+                    &framework.options().commands,
+                    GuildId::new(1207703559240679474),
+                )
+                .await?;
                 Ok(Data {
                     servers: Mutex::new(FileSync::load_or_new(
                         file_sync::Path::new("./servers.json"),
@@ -114,15 +167,15 @@ async fn main() -> Result<()> {
             })
         })
         .build();
-        
+
     // Build client
     let mut client = Client::builder(&token, intents)
         .framework(framework)
         .await
         .expect("Error creating client");
-    
+
     // Start client
     client.start().await?;
-    
+
     Ok(())
 }
