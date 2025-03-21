@@ -103,7 +103,7 @@ async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
     reply
         .edit(ctx, CreateReply::default().content(message))
         .await?;
-    info!("system_add command completed for new_system_name: {}", new_system_name);
+    info!("system_add command completed");
 
     Ok(())
 }
