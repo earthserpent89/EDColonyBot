@@ -27,7 +27,7 @@ struct Site {
 
 impl Site {
     fn new(name: String) -> Site {
-        return Site {
+        Site {
             name,
             commodities: Vec::new()
         }
