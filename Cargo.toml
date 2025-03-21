@@ -15,3 +15,4 @@ thiserror = "1.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 file_sync = { git = "https://github.com/zperk13/file_sync" }
+strum = { version = "0.27", features = ["derive"] }
