@@ -26,10 +26,10 @@ struct Site {
 }
 
 impl Site {
-    fn new(name: String) -> Site {
+    fn new(name: String, commodities: Option<Vec<Commodity>>) -> Site {
         Site {
             name,
-            commodities: Vec::new()
+            commodities: commodities.unwrap_or_default()
         }
     }
 }
@@ -154,8 +154,20 @@ async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
 
     Ok(())
 }
+
+#[derive(strum::EnumString)]
+enum SitePreset {
+
+}
+
+impl SitePreset {
+    fn commodities(&self) -> Vec<Commodity> {
+        todo!()
+    }
+}
+
 #[poise::command(slash_command)]
-async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) -> Result<()> {
+async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String, preset: Option<SitePreset>) -> Result<()> {
     let gid = match ctx.guild_id() {
         Some(gid) => gid,
         None => {
@@ -180,7 +192,7 @@ async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) 
                             }
                         }
                         message = format!("Site {new_site_name} registered in system {system_name}");
-                        system.sites.push(Site::new(new_site_name));
+                        system.sites.push(Site::new(new_site_name, preset.map(|preset| preset.commodities())));
                         return;
                     }
                 }
