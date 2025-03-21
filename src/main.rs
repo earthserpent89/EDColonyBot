@@ -52,7 +52,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 // system add <name>
 // system remove <name>
-// site add <system> <name> (<preset>)
+// site add <system> <name>
 // site remove <system> <name>
 // commodity add <system> <site> <commodity> <amount>
 // commodity remove <system> <site> <commodity>
