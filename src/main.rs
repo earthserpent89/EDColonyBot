@@ -212,7 +212,7 @@ async fn main() -> Result<()> {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![system_add(), system_remove()],
+            commands: vec![system_add(), system_remove(), site_add()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
