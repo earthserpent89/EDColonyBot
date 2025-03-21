@@ -9,8 +9,11 @@ use serenity::prelude::*;
 use std::collections::HashMap;
 use std::env;
 use tokio::sync::Mutex;
+
 #[allow(unused_imports)]
+#[rustfmt::skip]
 use tracing::{trace, debug, info, warn, error};
+
 mod commodities;
 
 #[derive(Serialize, Deserialize)]
@@ -30,7 +33,7 @@ impl Site {
     fn new(name: String) -> Site {
         Site {
             name,
-            commodities:Vec::new(),
+            commodities: Vec::new(),
         }
     }
 }
@@ -57,7 +60,9 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 #[poise::command(slash_command)]
 async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
-    info!("system_add command invoked with new_system_name: {}", new_system_name);
+    info!(
+        "system_add command invoked with new_system_name: {new_system_name}",
+    );
     let gid = match ctx.guild_id() {
         Some(gid) => gid,
         None => {
@@ -73,31 +78,38 @@ async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
         .lock()
         .await
         .modify(|servers| match servers.get_mut(&gid) {
-                Some(server) => {
-                    for system in server.iter() {
-                        if system.name.to_lowercase() == new_system_name {
-                            warn!("System {} already exists in server {}", new_system_name, gid);
-                            message = "That system is already registered in this server".into();
-                            return;
-                        }
+            Some(server) => {
+                for system in server.iter() {
+                    if system.name.to_lowercase() == new_system_name {
+                        warn!(
+                            "System {} already exists in server {}",
+                            new_system_name, gid
+                        );
+                        message = "That system is already registered in this server".into();
+                        return;
                     }
-                    info!("Registering new system: {} in server {}", new_system_name, gid);
-                    message = format!("System {new_system_name} registered");
-                    server.push(System {
+                }
+                info!(
+                    "Registering new system: {new_system_name} in server {gid}",
+                );
+                message = format!("System {new_system_name} registered");
+                server.push(System {
+                    name: new_system_name,
+                    sites: Vec::new(),
+                });
+            }
+            None => {
+                info!(
+                    "Registering new system: {new_system_name} in a new server entry {gid}",
+                );
+                message = format!("System {new_system_name} registered");
+                servers.insert(
+                    gid,
+                    vec![System {
                         name: new_system_name,
                         sites: Vec::new(),
-                    });
-                }
-                None => {
-                    info!("Registering new system: {} in a new server entry {}", new_system_name, gid);
-                    message = format!("System {new_system_name} registered");
-                    servers.insert(
-                        gid,
-                        vec![System {
-                            name: new_system_name,
-                            sites: Vec::new(),
-                        }],
-                    );
+                    }],
+                );
             }
         })
         .unwrap();
@@ -111,7 +123,10 @@ async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
 
 #[poise::command(slash_command)]
 async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
-    info!("system_remove command invoked with system_name: {}", system_name);
+    info!(
+        "system_remove command invoked with system_name: {}",
+        system_name
+    );
     let gid = match ctx.guild_id() {
         Some(gid) => gid,
         None => {
@@ -127,31 +142,36 @@ async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
         .lock()
         .await
         .modify(|servers| match servers.get_mut(&gid) {
-                Some(server) => {
-                    let index_to_remove = server.iter().enumerate().find(|(_index, system)| system.name.to_lowercase() == system_name).map(|(index, _system)| index);
-                    match index_to_remove {
-                        Some(index) => {
-                            info!("Removing system: {} from server {}", system_name, gid);
-                            server.remove(index);
-                            message = "Done".into();
-                        }
-                        None => {
-                            warn!("System {} not found in server {}", system_name, gid);
-                            message = "That system is not registered in this server".into();
-                        }
+            Some(server) => {
+                let index_to_remove = server
+                    .iter()
+                    .enumerate()
+                    .find(|(_index, system)| system.name.to_lowercase() == system_name)
+                    .map(|(index, _system)| index);
+                match index_to_remove {
+                    Some(index) => {
+                        info!("Removing system: {system_name} from server {gid}");
+                        server.remove(index);
+                        message = "Done".into();
+                    }
+                    None => {
+                        warn!("System {system_name} not found in server {gid}");
+                        message = "That system is not registered in this server".into();
                     }
                 }
-                None => {
-                    warn!("No systems registered in server {}", gid);
-                    message = "There are no systems registered in this server".into();
-                
+            }
+            None => {
+                warn!("No systems registered in server {gid}");
+                message = "There are no systems registered in this server".into();
             }
         })
         .unwrap();
     reply
         .edit(ctx, CreateReply::default().content(message))
         .await?;
-    info!("system_remove command completed for system_name: {}", system_name);
+    info!(
+        "system_remove command completed for system_name: {system_name}",
+    );
 
     Ok(())
 }
@@ -181,7 +201,8 @@ async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) 
                                 return;
                             }
                         }
-                        message = format!("Site {new_site_name} registered in system {system_name}");
+                        message =
+                            format!("Site {new_site_name} registered in system {system_name}");
                         system.sites.push(Site::new(new_site_name));
                         return;
                     }
@@ -199,7 +220,6 @@ async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) 
 
     Ok(())
 }
-
 
 #[tokio::main]
 async fn main() -> Result<()> {
