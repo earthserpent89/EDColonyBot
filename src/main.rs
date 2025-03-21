@@ -50,10 +50,10 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 // system add <name>
 // system remove <name>
 // site add <system> <name> (<preset>)
-// site remove <name>
-// commodity add <site_name> <comm_name> <amount>
-// commodity remove <site_name> <comm_name>
-// deliver <site_name> <comm_name> <amount>
+// site remove <system> <name>
+// commodity add <system> <site> <commodity> <amount>
+// commodity remove <system> <site> <commodity>
+// deliver <system> <site> <commodity> <amount>
 
 #[poise::command(slash_command)]
 async fn system_add(ctx: Context<'_>, new_system_name: String) -> Result<()> {
