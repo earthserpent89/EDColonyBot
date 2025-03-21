@@ -25,6 +25,15 @@ struct Site {
     commodities: Vec<Commodity>,
 }
 
+impl Site {
+    fn new(name: String) -> Site {
+        return Site {
+            name,
+            commodities: Vec::new()
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct System {
     name: String,
@@ -145,6 +154,50 @@ async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
 
     Ok(())
 }
+#[poise::command(slash_command)]
+async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) -> Result<()> {
+    let gid = match ctx.guild_id() {
+        Some(gid) => gid,
+        None => {
+            ctx.say("This is not a guild/server").await?;
+            return Ok(());
+        }
+    };
+    let reply = ctx.say("Processing...").await?;
+    let mut message = String::from("");
+    ctx.data()
+        .servers
+        .lock()
+        .await
+        .modify(|servers| match servers.get_mut(&gid) {
+            Some(server) => {
+                for system in server.iter_mut() {
+                    if system.name.to_lowercase() == system_name {
+                        for site in &system.sites {
+                            if site.name == new_site_name {
+                                message = "That site is already registered in that system".into();
+                                return;
+                            }
+                        }
+                        message = format!("Site {new_site_name} registered in system {system_name}");
+                        system.sites.push(Site::new(new_site_name));
+                        return;
+                    }
+                }
+                message = "That is not a system that is registered in this server".into();
+            }
+            None => {
+                message = "There are no systems registered in this server".into();
+            }
+        })
+        .unwrap();
+    reply
+        .edit(ctx, CreateReply::default().content(message))
+        .await?;
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
