@@ -11,10 +11,11 @@ use std::env;
 use tokio::sync::Mutex;
 #[allow(unused_imports)]
 use tracing::{trace, debug, info, warn, error};
+mod commodities;
 
 #[derive(Serialize, Deserialize)]
 struct Commodity {
-    name: String,
+    r#type: commodities::CommodityType,
     delivered: u64,
     required: u64,
 }
@@ -26,10 +27,10 @@ struct Site {
 }
 
 impl Site {
-    fn new(name: String, commodities: Option<Vec<Commodity>>) -> Site {
+    fn new(name: String) -> Site {
         Site {
             name,
-            commodities: commodities.unwrap_or_default()
+            commodities:Vec::new(),
         }
     }
 }
@@ -155,19 +156,8 @@ async fn system_remove(ctx: Context<'_>, system_name: String) -> Result<()> {
     Ok(())
 }
 
-#[derive(strum::EnumString)]
-enum SitePreset {
-
-}
-
-impl SitePreset {
-    fn commodities(&self) -> Vec<Commodity> {
-        todo!()
-    }
-}
-
 #[poise::command(slash_command)]
-async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String, preset: Option<SitePreset>) -> Result<()> {
+async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String) -> Result<()> {
     let gid = match ctx.guild_id() {
         Some(gid) => gid,
         None => {
@@ -192,7 +182,7 @@ async fn site_add(ctx: Context<'_>, system_name: String, new_site_name: String, 
                             }
                         }
                         message = format!("Site {new_site_name} registered in system {system_name}");
-                        system.sites.push(Site::new(new_site_name, preset.map(|preset| preset.commodities())));
+                        system.sites.push(Site::new(new_site_name));
                         return;
                     }
                 }
